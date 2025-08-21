@@ -1,7 +1,7 @@
 attendance_info = {}
 id_cnt = 0
 
-# dat[사용자ID][요일]
+# attendance_weekday_point[사용자ID][요일]
 attendance_weekday_point = [[0] * 7 for _ in range(100)]
 attendance_points = [0] * 100
 attendance_grade = [0] * 100
@@ -57,7 +57,7 @@ def calc_daily_point(attendance_id, weekday):
 
 def main():
     try:
-        get_attendance_table()
+        init_attendance_table()
 
         for i in range(1, id_cnt + 1):
             calc_bonus_point(i)
@@ -94,7 +94,7 @@ def calc_bonus_point(i):
         attendance_points[i] += 10
 
 
-def get_attendance_table():
+def init_attendance_table():
     try:
         with open("attendance_weekday_500.txt", encoding='utf-8') as f:
             for _ in range(500):
