@@ -22,7 +22,7 @@ def test_unknown_weekday():
     with pytest.raises(ValueError):
         svc.record_attendance("x","Funday")
 
-def test_v2_strategy_calc_and_points():
+def test_strategy_calc_and_points():
     svc = AttendanceService()
     svc.record_attendance("alice","wednesday") # +3
     svc.record_attendance("alice","sunday")    # +2
@@ -31,6 +31,6 @@ def test_v2_strategy_calc_and_points():
     res = dict((n,(p,g)) for n,p,g in svc.results())
     assert res["alice"]==(6,"NORMAL")
 
-def test_v2_parse_lines():
+def test_parse_lines():
     data = ["alice monday\n","badline\n"," bob   sunday "]
     assert list(parse_lines(data)) == [("alice","monday"),("bob","sunday")]

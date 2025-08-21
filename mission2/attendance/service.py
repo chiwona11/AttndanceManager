@@ -2,26 +2,19 @@
 from typing import List, Tuple
 from .repo import InMemoryRepository
 from .models import GRADE_DESC
+from .points import WeekdayPointStrategy, DefaultWeekdayPointStrategy
 
-WEEKDAY_INDEX = {"monday":0,"tuesday":1,"wednesday":2,"thursday":3,"friday":4,"saturday":5,"sunday":6}
 
 class AttendanceService:
-    def __init__(self, repo: InMemoryRepository | None = None) -> None:
+    def __init__(self, repo: InMemoryRepository | None = None, weekday_strategy: WeekdayPointStrategy | None = None) -> None:
         self.repo = repo or InMemoryRepository()
+        self.weekday_strategy = weekday_strategy or DefaultWeekdayPointStrategy()
 
     def record_attendance(self, name: str, weekday: str) -> None:
         p = self.repo.get_or_create(name)
-        wd = weekday.lower()
-        if wd not in WEEKDAY_INDEX:
-            raise ValueError(f"Unknown weekday: {weekday}")
-        idx = WEEKDAY_INDEX[wd]
+        add, idx, _, _ = self.weekday_strategy.calc_daily_point(weekday)
         p.weekday_counts[idx] += 1
-        if idx == 2:
-            p.points += 3
-        elif idx in (5,6):
-            p.points += 2
-        else:
-            p.points += 1
+        p.points += add
 
     def finalize(self) -> None:
         for p in self.repo.all():
