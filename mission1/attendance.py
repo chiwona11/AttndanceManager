@@ -9,7 +9,7 @@ names = [''] * 100
 wed = [0] * 100
 weeken = [0] * 100
 
-def input2(w, wk):
+def calc_attendance_point(w, wk):
     global id_cnt
 
     if w not in id1:
@@ -19,9 +19,15 @@ def input2(w, wk):
 
     id2 = id1[w]
 
+    add_point, index = calc_daily_point(id2, wk)
+
+    dat[id2][index] += 1
+    points[id2] += add_point
+
+
+def calc_daily_point(id2, wk):
     add_point = 0
     index = 0
-
     if wk == "monday":
         index = 0
         add_point += 1
@@ -46,33 +52,16 @@ def input2(w, wk):
         index = 6
         add_point += 2
         weeken[id2] += 1
+    return add_point, index
 
-    dat[id2][index] += 1
-    points[id2] += add_point
 
 def input_file():
     try:
-        with open("attendance_weekday_500.txt", encoding='utf-8') as f:
-            for _ in range(500):
-                line = f.readline()
-                if not line:
-                    break
-                parts = line.strip().split()
-                if len(parts) == 2:
-                    input2(parts[0], parts[1])
+        get_attendance_table()
 
         for i in range(1, id_cnt + 1):
-            if dat[i][2] > 9:
-                points[i] += 10
-            if dat[i][5] + dat[i][6] > 9:
-                points[i] += 10
-
-            if points[i] >= 50:
-                grade[i] = 1
-            elif points[i] >= 30:
-                grade[i] = 2
-            else:
-                grade[i] = 0
+            calc_bonus_point(i)
+            calc_grade(i)
 
             print(f"NAME : {names[i]}, POINT : {points[i]}, GRADE : ", end="")
             if grade[i] == 1:
@@ -84,12 +73,44 @@ def input_file():
 
         print("\nRemoved player")
         print("==============")
-        for i in range(1, id_cnt + 1):
-            if grade[i] not in (1, 2) and wed[i] == 0 and weeken[i] == 0:
-                print(names[i])
+        check_removed_player()
 
     except FileNotFoundError:
         print("파일을 찾을 수 없습니다.")
+
+
+def check_removed_player():
+    for i in range(1, id_cnt + 1):
+        if grade[i] not in (1, 2) and wed[i] == 0 and weeken[i] == 0:
+            print(names[i])
+
+
+def calc_grade(i):
+    if points[i] >= 50:
+        grade[i] = 1
+    elif points[i] >= 30:
+        grade[i] = 2
+    else:
+        grade[i] = 0
+
+
+def calc_bonus_point(i):
+    if dat[i][2] > 9:
+        points[i] += 10
+    if dat[i][5] + dat[i][6] > 9:
+        points[i] += 10
+
+
+def get_attendance_table():
+    with open("attendance_weekday_500.txt", encoding='utf-8') as f:
+        for _ in range(500):
+            line = f.readline()
+            if not line:
+                break
+            parts = line.strip().split()
+            if len(parts) == 2:
+                calc_attendance_point(parts[0], parts[1])
+
 
 if __name__ == "__main__":
     input_file()
