@@ -1,3 +1,5 @@
+from attendance.io import load_from_file
+
 attendance_info = {}
 id_cnt = 0
 
@@ -94,16 +96,10 @@ def calc_bonus_point(i):
         attendance_points[i] += 10
 
 
-def init_attendance_table():
+def init_attendance_table(filepath: str = 'attendance_weekday_500.txt'):
     try:
-        with open("attendance_weekday_500.txt", encoding='utf-8') as f:
-            for _ in range(500):
-                line = f.readline()
-                if not line:
-                    break
-                parts = line.strip().split()
-                if len(parts) == 2:
-                    calc_attendance_point(parts[0], parts[1])
+        for name, weekday in load_from_file(filepath):
+            calc_attendance_point(name, weekday)
     except FileNotFoundError:
         print("파일을 찾을 수 없습니다.")
 
