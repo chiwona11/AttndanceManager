@@ -1,56 +1,100 @@
-id1 = {}
+attendance_info = {}
 id_cnt = 0
 
-# dat[사용자ID][요일]
-dat = [[0] * 100 for _ in range(100)]
-points = [0] * 100
-grade = [0] * 100
-names = [''] * 100
-wed = [0] * 100
-weeken = [0] * 100
+# attendance_weekday_point[사용자ID][요일]
+attendance_weekday_point = [[0] * 7 for _ in range(100)]
+attendance_points = [0] * 100
+attendance_grade = [0] * 100
+attendance_name = [''] * 100
+wednesday_attendance = [0] * 100
+weekend_attendance = [0] * 100
+grade_desc = {0: 'NORMAL', 1: 'GOLD', 2: 'SILVER'}
 
-def input2(w, wk):
+
+def calc_attendance_point(name, weekday):
     global id_cnt
 
-    if w not in id1:
+    if name not in attendance_info:
         id_cnt += 1
-        id1[w] = id_cnt
-        names[id_cnt] = w
+        attendance_info[name] = id_cnt
+        attendance_name[id_cnt] = name
 
-    id2 = id1[w]
+    add_point, index = calc_daily_point(attendance_info[name], weekday)
 
+    attendance_weekday_point[attendance_info[name]][index] += 1
+    attendance_points[attendance_info[name]] += add_point
+
+
+def calc_daily_point(attendance_id, weekday):
     add_point = 0
-    index = 0
-
-    if wk == "monday":
-        index = 0
+    weekday_index = 0
+    if weekday == "monday":
+        weekday_index = 0
         add_point += 1
-    elif wk == "tuesday":
-        index = 1
+    elif weekday == "tuesday":
+        weekday_index = 1
         add_point += 1
-    elif wk == "wednesday":
-        index = 2
+    elif weekday == "wednesday":
+        weekday_index = 2
         add_point += 3
-        wed[id2] += 1
-    elif wk == "thursday":
-        index = 3
+        wednesday_attendance[attendance_id] += 1
+    elif weekday == "thursday":
+        weekday_index = 3
         add_point += 1
-    elif wk == "friday":
-        index = 4
+    elif weekday == "friday":
+        weekday_index = 4
         add_point += 1
-    elif wk == "saturday":
-        index = 5
+    elif weekday == "saturday":
+        weekday_index = 5
         add_point += 2
-        weeken[id2] += 1
-    elif wk == "sunday":
-        index = 6
+        weekend_attendance[attendance_id] += 1
+    elif weekday == "sunday":
+        weekday_index = 6
         add_point += 2
-        weeken[id2] += 1
+        weekend_attendance[attendance_id] += 1
+    return add_point, weekday_index
 
-    dat[id2][index] += 1
-    points[id2] += add_point
 
-def input_file():
+def main():
+    try:
+        init_attendance_table()
+
+        for i in range(1, id_cnt + 1):
+            calc_bonus_point(i)
+            calc_grade(i)
+            print(f"NAME : {attendance_name[i]}, POINT : {attendance_points[i]}, GRADE : {grade_desc[attendance_grade[i]]}")
+
+        print("\nRemoved player")
+        print("==============")
+        check_removed_player()
+
+    except Exception:
+        print("계산에 실패했습니다.")
+
+
+def check_removed_player():
+    for i in range(1, id_cnt + 1):
+        if attendance_grade[i] not in (1, 2) and wednesday_attendance[i] == 0 and weekend_attendance[i] == 0:
+            print(attendance_name[i])
+
+
+def calc_grade(i):
+    if attendance_points[i] >= 50:
+        attendance_grade[i] = 1
+    elif attendance_points[i] >= 30:
+        attendance_grade[i] = 2
+    else:
+        attendance_grade[i] = 0
+
+
+def calc_bonus_point(i):
+    if attendance_weekday_point[i][2] > 9:
+        attendance_points[i] += 10
+    if attendance_weekday_point[i][5] + attendance_weekday_point[i][6] > 9:
+        attendance_points[i] += 10
+
+
+def init_attendance_table():
     try:
         with open("attendance_weekday_500.txt", encoding='utf-8') as f:
             for _ in range(500):
@@ -59,37 +103,10 @@ def input_file():
                     break
                 parts = line.strip().split()
                 if len(parts) == 2:
-                    input2(parts[0], parts[1])
-
-        for i in range(1, id_cnt + 1):
-            if dat[i][2] > 9:
-                points[i] += 10
-            if dat[i][5] + dat[i][6] > 9:
-                points[i] += 10
-
-            if points[i] >= 50:
-                grade[i] = 1
-            elif points[i] >= 30:
-                grade[i] = 2
-            else:
-                grade[i] = 0
-
-            print(f"NAME : {names[i]}, POINT : {points[i]}, GRADE : ", end="")
-            if grade[i] == 1:
-                print("GOLD")
-            elif grade[i] == 2:
-                print("SILVER")
-            else:
-                print("NORMAL")
-
-        print("\nRemoved player")
-        print("==============")
-        for i in range(1, id_cnt + 1):
-            if grade[i] not in (1, 2) and wed[i] == 0 and weeken[i] == 0:
-                print(names[i])
-
+                    calc_attendance_point(parts[0], parts[1])
     except FileNotFoundError:
         print("파일을 찾을 수 없습니다.")
 
+
 if __name__ == "__main__":
-    input_file()
+    main()
