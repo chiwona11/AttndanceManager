@@ -35,6 +35,22 @@ def test_parse_lines():
     data = ["alice monday\n","badline\n"," bob   sunday "]
     assert list(parse_lines(data)) == [("alice","monday"),("bob","sunday")]
 
+def test_load_from_file_success(tmp_path):
+    p = tmp_path / "data.txt"
+    p.write_text("alice monday\n bob sunday\nBAD\n", encoding="utf-8")
+    rows = list(load_from_file(str(p)))
+    assert rows == [("alice","monday"), ("bob","sunday")]
+
+def test_load_from_file_not_found(capsys):
+    sys.modules.pop("main", None)
+    import mission2.main as main_mod
+
+    rc = main_mod.main("no_file.txt")
+    out = capsys.readouterr().out
+
+    assert rc == 1
+    assert out.strip() == "파일을 찾을 수 없습니다."
+
 def test_bonus_and_grade():
     svc = AttendanceService()
     for _ in range(10): svc.record_attendance("alice","wednesday")  # 30
