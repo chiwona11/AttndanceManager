@@ -1,4 +1,3 @@
-
 import pytest, sys
 from mission2.attendance.service import AttendanceService
 from mission2.attendance.io import parse_lines, load_from_file
@@ -7,39 +6,44 @@ from mission2.attendance.io import parse_lines, load_from_file
 def test_record_and_finalize():
     svc = AttendanceService()
     for _ in range(10):  # 10*3 = 30
-        svc.record_attendance("alice","wednesday")
+        svc.record_attendance("alice", "wednesday")
     for _ in range(10):  # 10*2 = 20 -> total 50 => GOLD
-        svc.record_attendance("alice","saturday")
+        svc.record_attendance("alice", "saturday")
     for _ in range(30):  # 30*1 = 30 => SILVER
-        svc.record_attendance("bob","monday")
+        svc.record_attendance("bob", "monday")
     svc.finalize()
-    res = {n:(p,g) for n,p,g in svc.results()}
-    assert res["alice"]==(70,"GOLD")
-    assert res["bob"]==(30,"SILVER")
+    res = {n: (p, g) for n, p, g in svc.results()}
+    assert res["alice"] == (70, "GOLD")
+    assert res["bob"] == (30, "SILVER")
+
 
 def test_unknown_weekday():
     svc = AttendanceService()
     with pytest.raises(ValueError):
-        svc.record_attendance("x","Funday")
+        svc.record_attendance("x", "Funday")
+
 
 def test_strategy_calc_and_points():
     svc = AttendanceService()
-    svc.record_attendance("alice","wednesday") # +3
-    svc.record_attendance("alice","sunday")    # +2
-    svc.record_attendance("alice","monday")    # +1 => total 6
+    svc.record_attendance("alice", "wednesday")  # +3
+    svc.record_attendance("alice", "sunday")  # +2
+    svc.record_attendance("alice", "monday")  # +1 => total 6
     svc.finalize()
-    res = dict((n,(p,g)) for n,p,g in svc.results())
-    assert res["alice"]==(6,"NORMAL")
+    res = dict((n, (p, g)) for n, p, g in svc.results())
+    assert res["alice"] == (6, "NORMAL")
+
 
 def test_parse_lines():
-    data = ["alice monday\n","badline\n"," bob   sunday "]
-    assert list(parse_lines(data)) == [("alice","monday"),("bob","sunday")]
+    data = ["alice monday\n", "badline\n", " bob   sunday "]
+    assert list(parse_lines(data)) == [("alice", "monday"), ("bob", "sunday")]
+
 
 def test_load_from_file_success(tmp_path):
     p = tmp_path / "data.txt"
     p.write_text("alice monday\n bob sunday\nBAD\n", encoding="utf-8")
     rows = list(load_from_file(str(p)))
-    assert rows == [("alice","monday"), ("bob","sunday")]
+    assert rows == [("alice", "monday"), ("bob", "sunday")]
+
 
 def test_load_from_file_not_found(capsys):
     sys.modules.pop("main", None)
@@ -51,21 +55,22 @@ def test_load_from_file_not_found(capsys):
     assert rc == 1
     assert out.strip() == "파일을 찾을 수 없습니다."
 
+
 def test_bonus_and_grade():
     svc = AttendanceService()
-    for _ in range(10): svc.record_attendance("alice","wednesday")  # 30
+    for _ in range(10): svc.record_attendance("alice", "wednesday")  # 30
     for _ in range(5):
-        svc.record_attendance("alice","saturday") # +10
-        svc.record_attendance("alice","sunday")   # +10 -> 50 before bonus
+        svc.record_attendance("alice", "saturday")  # +10
+        svc.record_attendance("alice", "sunday")  # +10 -> 50 before bonus
     svc.finalize()  # +20 bonus
-    res = dict((n,(p,g)) for n,p,g in svc.results())
-    assert res["alice"]==(70,"GOLD")
+    res = dict((n, (p, g)) for n, p, g in svc.results())
+    assert res["alice"] == (70, "GOLD")
 
 
 def test_removed_policy_and_main(tmp_path, capsys):
     p = tmp_path / "data.txt"
-    lines = ["alice wednesday\n"]*10 + ["alice saturday\n"]*5 + ["alice sunday\n"]*5
-    lines += ["bob monday\n"]*29 + ["bob tuesday\n"]
+    lines = ["alice wednesday\n"] * 10 + ["alice saturday\n"] * 5 + ["alice sunday\n"] * 5
+    lines += ["bob monday\n"] * 29 + ["bob tuesday\n"]
     lines += ["carol monday\n"]
     p.write_text("".join(lines), encoding="utf-8")
 
@@ -78,4 +83,3 @@ def test_removed_policy_and_main(tmp_path, capsys):
     assert "NAME : bob, POINT : 30, GRADE : SILVER" in out
     assert "NAME : carol, POINT : 1, GRADE : NORMAL" in out
     assert "Removed player" in out and "carol" in out
-

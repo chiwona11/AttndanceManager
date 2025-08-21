@@ -1,6 +1,6 @@
-
 from mission2.attendance.service import AttendanceService
 from mission2.attendance.io import load_from_file
+
 
 def main(filepath: str = "attendance_weekday_500.txt") -> int:
     svc = AttendanceService()
@@ -19,6 +19,7 @@ def main(filepath: str = "attendance_weekday_500.txt") -> int:
     for name in svc.removed_players():
         print(name)
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())
