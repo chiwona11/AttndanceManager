@@ -1,7 +1,7 @@
 
-import pytest
+import pytest, sys
 from mission2.attendance.service import AttendanceService
-from mission2.attendance.io import parse_lines
+from mission2.attendance.io import parse_lines, load_from_file
 
 
 def test_record_and_finalize():
@@ -44,3 +44,22 @@ def test_bonus_and_grade():
     svc.finalize()  # +20 bonus
     res = dict((n,(p,g)) for n,p,g in svc.results())
     assert res["alice"]==(70,"GOLD")
+
+
+def test_removed_policy_and_main(tmp_path, capsys):
+    p = tmp_path / "data.txt"
+    lines = ["alice wednesday\n"]*10 + ["alice saturday\n"]*5 + ["alice sunday\n"]*5
+    lines += ["bob monday\n"]*29 + ["bob tuesday\n"]
+    lines += ["carol monday\n"]
+    p.write_text("".join(lines), encoding="utf-8")
+
+    sys.modules.pop("main", None)
+    import mission2.main as main_mod
+    rc = main_mod.main(str(p))
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "NAME : alice, POINT : 70, GRADE : GOLD" in out
+    assert "NAME : bob, POINT : 30, GRADE : SILVER" in out
+    assert "NAME : carol, POINT : 1, GRADE : NORMAL" in out
+    assert "Removed player" in out and "carol" in out
+
