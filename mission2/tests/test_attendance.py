@@ -14,7 +14,7 @@ def test_record_and_finalize():
         svc.record_attendance("bob","monday")
     svc.finalize()
     res = {n:(p,g) for n,p,g in svc.results()}
-    assert res["alice"]==(50,"GOLD")
+    assert res["alice"]==(70,"GOLD")
     assert res["bob"]==(30,"SILVER")
 
 def test_unknown_weekday():
@@ -34,3 +34,13 @@ def test_strategy_calc_and_points():
 def test_parse_lines():
     data = ["alice monday\n","badline\n"," bob   sunday "]
     assert list(parse_lines(data)) == [("alice","monday"),("bob","sunday")]
+
+def test_bonus_and_grade():
+    svc = AttendanceService()
+    for _ in range(10): svc.record_attendance("alice","wednesday")  # 30
+    for _ in range(5):
+        svc.record_attendance("alice","saturday") # +10
+        svc.record_attendance("alice","sunday")   # +10 -> 50 before bonus
+    svc.finalize()  # +20 bonus
+    res = dict((n,(p,g)) for n,p,g in svc.results())
+    assert res["alice"]==(70,"GOLD")
