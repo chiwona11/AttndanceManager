@@ -1,6 +1,8 @@
 
 import pytest
 from mission2.attendance.service import AttendanceService
+from mission2.attendance.io import parse_lines
+
 
 def test_record_and_finalize():
     svc = AttendanceService()
@@ -19,3 +21,16 @@ def test_unknown_weekday():
     svc = AttendanceService()
     with pytest.raises(ValueError):
         svc.record_attendance("x","Funday")
+
+def test_v2_strategy_calc_and_points():
+    svc = AttendanceService()
+    svc.record_attendance("alice","wednesday") # +3
+    svc.record_attendance("alice","sunday")    # +2
+    svc.record_attendance("alice","monday")    # +1 => total 6
+    svc.finalize()
+    res = dict((n,(p,g)) for n,p,g in svc.results())
+    assert res["alice"]==(6,"NORMAL")
+
+def test_v2_parse_lines():
+    data = ["alice monday\n","badline\n"," bob   sunday "]
+    assert list(parse_lines(data)) == [("alice","monday"),("bob","sunday")]
